@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operations Case Analysis Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #3b82f6;
+        }
+        body {
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        .card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .active-tab {
+            border-bottom: 3px solid var(--accent);
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="bg-slate-900 text-white p-4 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold tracking-tight">OpsCase <span class="text-blue-400">Pro</span></h1>
+            <div class="space-x-4 text-sm font-medium">
+                <button onclick="switchTab('dashboard')" class="hover:text-blue-300 transition">Dashboard</button>
+                <button onclick="switchTab('calculator')" class="hover:text-blue-300 transition">Calculators</button>
+                <button onclick="switchTab('process')" class="hover:text-blue-300 transition">Process Map</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-6">
+        
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="tab-content">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold mb-2">Case Overview: Global Logistics Optimization</h2>
+                <p class="text-slate-500">Analyze throughput, bottleneck identification, and efficiency metrics.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="card p-6 border-l-4 border-blue-500">
+                    <p class="text-sm text-slate-500 uppercase font-bold">Throughput Rate</p>
+                    <p class="text-3xl font-bold">450 <span class="text-lg font-normal text-slate-400">units/hr</span></p>
+                </div>
+                <div class="card p-6 border-l-4 border-amber-500">
+                    <p class="text-sm text-slate-500 uppercase font-bold">Bottleneck Utilization</p>
+                    <p class="text-3xl font-bold">94%</p>
+                </div>
+                <div class="card p-6 border-l-4 border-emerald-500">
+                    <p class="text-sm text-slate-500 uppercase font-bold">Cycle Time Efficiency</p>
+                    <p class="text-3xl font-bold">82.5%</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="card p-6">
+                    <h3 class="font-bold mb-4 border-bottom pb-2">Analysis Notes</h3>
+                    <textarea id="caseNotes" class="w-full h-64 p-3 border rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Type your case findings here..."></textarea>
+                    <button onclick="saveNotes()" class="mt-4 bg-slate-800 text-white px-4 py-2 rounded-md hover:bg-slate-700">Save Observations</button>
+                </div>
+                <div class="card p-6">
+                    <h3 class="font-bold mb-4">Problem Statements</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start gap-3">
+                            <span class="bg-red-100 text-red-600 p-1 rounded">1</span>
+                            <p class="text-sm">Inbound sorting takes 40% longer than outbound staging.</p>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="bg-red-100 text-red-600 p-1 rounded">2</span>
+                            <p class="text-sm">Wait times between Station B and C average 12 minutes.</p>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="bg-red-100 text-red-600 p-1 rounded">3</span>
+                            <p class="text-sm">Quality control rejects have increased by 5% this quarter.</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Calculator Section -->
+        <section id="calculator" class="tab-content hidden">
+            <h2 class="text-2xl font-bold mb-6">Operations Toolkit</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Takt Time Calc -->
+                <div class="card p-6">
+                    <h3 class="font-bold text-blue-600 mb-4 uppercase text-xs tracking-widest">Takt Time Calculator</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm mb-1">Available Work Time (min)</label>
+                            <input type="number" id="workTime" class="w-full p-2 border rounded" value="480">
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-1">Customer Demand (units)</label>
+                            <input type="number" id="demand" class="w-full p-2 border rounded" value="120">
+                        </div>
+                        <button onclick="calcTakt()" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Calculate</button>
+                        <div id="taktResult" class="p-3 bg-blue-50 rounded text-center font-bold text-blue-800 hidden"></div>
+                    </div>
+                </div>
+
+                <!-- ROI Calc -->
+                <div class="card p-6">
+                    <h3 class="font-bold text-emerald-600 mb-4 uppercase text-xs tracking-widest">Automation ROI</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm mb-1">Investment Cost ($)</label>
+                            <input type="number" id="cost" class="w-full p-2 border rounded" value="50000">
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-1">Annual Savings ($)</label>
+                            <input type="number" id="savings" class="w-full p-2 border rounded" value="15000">
+                        </div>
+                        <button onclick="calcROI()" class="w-full bg-emerald-600 text-white py-2 rounded hover:bg-emerald-700">Calculate</button>
+                        <div id="roiResult" class="p-3 bg-emerald-50 rounded text-center font-bold text-emerald-800 hidden"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Process Map Section -->
+        <section id="process" class="tab-content hidden">
+            <h2 class="text-2xl font-bold mb-6">Process Visualizer</h2>
+            <div class="card p-8 flex flex-col items-center">
+                <div class="flex flex-wrap justify-center items-center gap-4">
+                    <div class="p-4 bg-slate-100 border-2 border-slate-300 rounded text-center">
+                        <span class="text-xs font-bold block">STEP 1</span>
+                        Inbound
+                    </div>
+                    <div class="text-slate-400">➔</div>
+                    <div class="p-4 bg-blue-100 border-2 border-blue-300 rounded text-center shadow-lg">
+                        <span class="text-xs font-bold block">STEP 2</span>
+                        Sorting (BOTTLENECK)
+                    </div>
+                    <div class="text-slate-400">➔</div>
+                    <div class="p-4 bg-slate-100 border-2 border-slate-300 rounded text-center">
+                        <span class="text-xs font-bold block">STEP 3</span>
+                        Staging
+                    </div>
+                    <div class="text-slate-400">➔</div>
+                    <div class="p-4 bg-slate-100 border-2 border-slate-300 rounded text-center">
+                        <span class="text-xs font-bold block">STEP 4</span>
+                        Shipping
+                    </div>
+                </div>
+                <p class="mt-8 text-sm text-slate-500 italic max-w-md text-center">
+                    Visual representation of the physical flow. Highlighted blue box indicates the identified primary constraint (Station 2).
+                </p>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(section => {
+                section.classList.add('hidden');
+            });
+            document.getElementById(tabId).classList.remove('hidden');
+        }
+
+        function calcTakt() {
+            const time = document.getElementById('workTime').value;
+            const demand = document.getElementById('demand').value;
+            const result = (time / demand).toFixed(2);
+            const el = document.getElementById('taktResult');
+            el.innerText = `Takt Time: ${result} minutes per unit`;
+            el.classList.remove('hidden');
+        }
+
+        function calcROI() {
+            const cost = document.getElementById('cost').value;
+            const savings = document.getElementById('savings').value;
+            const roi = ((savings / cost) * 100).toFixed(1);
+            const payback = (cost / savings).toFixed(1);
+            const el = document.getElementById('roiResult');
+            el.innerText = `ROI: ${roi}% | Payback: ${payback} years`;
+            el.classList.remove('hidden');
+        }
+
+        function saveNotes() {
+            const notes = document.getElementById('caseNotes').value;
+            // In a real app, this would save to a database
+            const statusBox = document.createElement('div');
+            statusBox.className = "fixed bottom-4 right-4 bg-slate-800 text-white px-4 py-2 rounded-lg shadow-xl animate-bounce";
+            statusBox.innerText = "Progress Saved Locally!";
+            document.body.appendChild(statusBox);
+            setTimeout(() => statusBox.remove(), 3000);
+        }
+    </script>
+</body>
+</html>
