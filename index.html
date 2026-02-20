@@ -2,203 +2,258 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Operations Case Analysis Tool</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zwiggy Gov-Ops v4 (Settlement)</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #0f172a;
-            --accent: #3b82f6;
-        }
-        body {
-            background-color: #f8fafc;
-            color: #1e293b;
-        }
-        .card {
-            background: white;
-            border-radius: 0.75rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
-        }
-        .active-tab {
-            border-bottom: 3px solid var(--accent);
-            color: var(--accent);
-        }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .mono { font-family: 'JetBrains+Mono', monospace; }
+        .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
+        @keyframes pulse-red { 0%, 100% { background-color: #ef4444; } 50% { background-color: #991b1b; } }
+        .instability-active { animation: pulse-red 2s infinite; }
+        .slide-up { animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .payment-shimmer { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="bg-slate-50 text-slate-900 select-none overflow-x-hidden">
 
-    <!-- Navigation -->
-    <nav class="bg-slate-900 text-white p-4 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-bold tracking-tight">OpsCase <span class="text-blue-400">Pro</span></h1>
-            <div class="space-x-4 text-sm font-medium">
-                <button onclick="switchTab('dashboard')" class="hover:text-blue-300 transition">Dashboard</button>
-                <button onclick="switchTab('calculator')" class="hover:text-blue-300 transition">Calculators</button>
-                <button onclick="switchTab('process')" class="hover:text-blue-300 transition">Process Map</button>
+    <header class="fixed top-0 inset-x-0 glass border-b z-50">
+        <div class="px-5 py-3 flex justify-between items-center max-w-md mx-auto">
+            <div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sigma Squad Hub</p>
+                <h2 class="text-sm font-bold flex items-center">Main Campus 📍</h2>
             </div>
+            <div id="zone-pill" class="px-3 py-1 rounded-full text-[10px] font-black uppercase transition-all duration-500 bg-emerald-100 text-emerald-600 border border-emerald-200">
+                Zone 1: Healthy
+            </div>
+        </div>
+    </header>
+
+    <main class="pt-20 pb-32 px-4 max-w-md mx-auto">
+        <div id="ops-card" class="bg-slate-900 rounded-[32px] p-6 mb-8 text-white shadow-2xl transition-all duration-500 border border-white/10">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h3 class="font-extrabold text-xl tracking-tight">Governor Protocol</h3>
+                    <p id="complexity-label" class="text-slate-500 text-[10px] mono uppercase mt-1">Status: Atomic Flow</p>
+                </div>
+                <button onclick="toggleStress()" class="group flex flex-col items-center">
+                    <div id="stress-bg" class="w-14 h-7 bg-slate-700 rounded-full relative transition-all duration-300 ring-4 ring-white/5">
+                        <div id="stress-knob" class="absolute left-1 top-1 h-5 w-5 bg-white rounded-full transition-transform duration-300 shadow-md"></div>
+                    </div>
+                    <span class="text-[9px] mt-2 font-black text-slate-500">STRESS MODE</span>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-white/5 rounded-2xl p-4 border border-white/10">
+                    <p class="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">Sync Delta (Δ)</p>
+                    <p id="delta-display" class="text-lg font-black mono text-emerald-400">0m</p>
+                </div>
+                <div class="bg-white/5 rounded-2xl p-4 border border-white/10">
+                    <p class="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">Node Load</p>
+                    <p id="proximity-display" class="text-lg font-black mono text-blue-400">Optimal</p>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="font-black text-2xl mb-5 px-1">Nearby Nodes</h3>
+        <div id="stores-container" class="space-y-8"></div>
+    </main>
+
+    <div id="cart-sheet" class="fixed inset-0 bg-slate-900/60 z-[60] hidden transition-opacity duration-300 opacity-0 backdrop-blur-sm">
+        <div id="sheet-container" class="absolute bottom-0 inset-x-0 bg-white rounded-t-[44px] p-8 pb-12 slide-up max-w-md mx-auto border-t shadow-2xl overflow-y-auto max-h-[90vh]">
+            <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-8"></div>
+            
+            <div id="cart-content">
+                <h2 class="text-2xl font-black mb-1">Order Governance</h2>
+                <p id="governor-msg" class="text-xs text-slate-500 mb-8 font-medium">Validating JIT synchronization & settlement paths...</p>
+
+                <div id="jit-viz" class="mb-8 space-y-4 bg-slate-50 p-4 rounded-3xl border border-slate-100"></div>
+                <div id="cart-items" class="space-y-3 mb-10 max-h-60 overflow-y-auto"></div>
+
+                <button id="checkout-btn" onclick="startCheckout()" class="w-full py-5 rounded-[24px] font-black text-white bg-[#E23744] shadow-xl shadow-red-200 active:scale-[0.97] transition-all disabled:bg-slate-200">
+                    PLACE ORDER
+                </button>
+            </div>
+
+            <div id="analytics-dashboard" class="hidden">
+                <div class="text-center mb-8">
+                    <div id="success-icon" class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">✓</div>
+                    <h2 id="analytics-title" class="text-2xl font-black">CTO Governance Report</h2>
+                    <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mt-1">Settlement Integrity: SUCCESS</p>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-slate-900 text-white rounded-3xl p-5 shadow-xl">
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-3">Atomic Settlement Flow</p>
+                        <div class="space-y-3" id="settlement-nodes">
+                            </div>
+                        <div class="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
+                            <span class="text-[10px] font-bold text-slate-400">Total Settlement Path</span>
+                            <span id="stat-settle-count" class="text-xs font-black mono text-emerald-400">0 Nodes</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 rounded-3xl p-5 border border-slate-100">
+                        <p class="text-[10px] font-black text-blue-500 uppercase mb-3">Synchronization Stability</p>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center"><span class="text-xs font-bold text-slate-600">Sync Delta (Δ)</span><span id="stat-delta" class="text-xs font-black mono">0m</span></div>
+                            <div class="flex justify-between items-center"><span class="text-xs font-bold text-slate-600">Rider Idle Time (MUDA)</span><span id="stat-muda" class="text-xs font-black mono">0m</span></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 rounded-3xl p-5 border border-slate-100">
+                        <p class="text-[10px] font-black text-purple-500 uppercase mb-3">Dispatch System Load</p>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center"><span class="text-xs font-bold text-slate-600">Complexity Class</span><span id="stat-complex" class="text-xs font-black mono">O(1)</span></div>
+                            <div class="flex justify-between items-center"><span class="text-xs font-bold text-slate-600">Routing Stability</span><span class="text-xs font-black text-emerald-500 uppercase">Stable</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="resetApp()" class="w-full mt-10 py-4 rounded-2xl font-black bg-slate-900 text-white shadow-lg">RESET SIMULATION</button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="fixed bottom-0 inset-x-0 glass border-t z-50 safe-area-bottom">
+        <div class="max-w-md mx-auto px-12 py-5 flex justify-between items-center">
+            <div class="text-[#E23744] flex flex-col items-center gap-1.5">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                <span class="text-[9px] font-black uppercase">Hub</span>
+            </div>
+            <button onclick="openCart()" class="relative text-slate-300 flex flex-col items-center gap-1.5">
+                <span id="cart-count" class="absolute -top-2 -right-3 bg-[#E23744] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white font-black scale-90 hidden">0</span>
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                <span class="text-[9px] font-black uppercase">Cart</span>
+            </button>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto p-6">
-        
-        <!-- Dashboard Section -->
-        <section id="dashboard" class="tab-content">
-            <div class="mb-8">
-                <h2 class="text-2xl font-bold mb-2">Case Overview: Global Logistics Optimization</h2>
-                <p class="text-slate-500">Analyze throughput, bottleneck identification, and efficiency metrics.</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="card p-6 border-l-4 border-blue-500">
-                    <p class="text-sm text-slate-500 uppercase font-bold">Throughput Rate</p>
-                    <p class="text-3xl font-bold">450 <span class="text-lg font-normal text-slate-400">units/hr</span></p>
-                </div>
-                <div class="card p-6 border-l-4 border-amber-500">
-                    <p class="text-sm text-slate-500 uppercase font-bold">Bottleneck Utilization</p>
-                    <p class="text-3xl font-bold">94%</p>
-                </div>
-                <div class="card p-6 border-l-4 border-emerald-500">
-                    <p class="text-sm text-slate-500 uppercase font-bold">Cycle Time Efficiency</p>
-                    <p class="text-3xl font-bold">82.5%</p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="card p-6">
-                    <h3 class="font-bold mb-4 border-bottom pb-2">Analysis Notes</h3>
-                    <textarea id="caseNotes" class="w-full h-64 p-3 border rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Type your case findings here..."></textarea>
-                    <button onclick="saveNotes()" class="mt-4 bg-slate-800 text-white px-4 py-2 rounded-md hover:bg-slate-700">Save Observations</button>
-                </div>
-                <div class="card p-6">
-                    <h3 class="font-bold mb-4">Problem Statements</h3>
-                    <ul class="space-y-3">
-                        <li class="flex items-start gap-3">
-                            <span class="bg-red-100 text-red-600 p-1 rounded">1</span>
-                            <p class="text-sm">Inbound sorting takes 40% longer than outbound staging.</p>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="bg-red-100 text-red-600 p-1 rounded">2</span>
-                            <p class="text-sm">Wait times between Station B and C average 12 minutes.</p>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="bg-red-100 text-red-600 p-1 rounded">3</span>
-                            <p class="text-sm">Quality control rejects have increased by 5% this quarter.</p>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </section>
-
-        <!-- Calculator Section -->
-        <section id="calculator" class="tab-content hidden">
-            <h2 class="text-2xl font-bold mb-6">Operations Toolkit</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Takt Time Calc -->
-                <div class="card p-6">
-                    <h3 class="font-bold text-blue-600 mb-4 uppercase text-xs tracking-widest">Takt Time Calculator</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm mb-1">Available Work Time (min)</label>
-                            <input type="number" id="workTime" class="w-full p-2 border rounded" value="480">
-                        </div>
-                        <div>
-                            <label class="block text-sm mb-1">Customer Demand (units)</label>
-                            <input type="number" id="demand" class="w-full p-2 border rounded" value="120">
-                        </div>
-                        <button onclick="calcTakt()" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Calculate</button>
-                        <div id="taktResult" class="p-3 bg-blue-50 rounded text-center font-bold text-blue-800 hidden"></div>
-                    </div>
-                </div>
-
-                <!-- ROI Calc -->
-                <div class="card p-6">
-                    <h3 class="font-bold text-emerald-600 mb-4 uppercase text-xs tracking-widest">Automation ROI</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm mb-1">Investment Cost ($)</label>
-                            <input type="number" id="cost" class="w-full p-2 border rounded" value="50000">
-                        </div>
-                        <div>
-                            <label class="block text-sm mb-1">Annual Savings ($)</label>
-                            <input type="number" id="savings" class="w-full p-2 border rounded" value="15000">
-                        </div>
-                        <button onclick="calcROI()" class="w-full bg-emerald-600 text-white py-2 rounded hover:bg-emerald-700">Calculate</button>
-                        <div id="roiResult" class="p-3 bg-emerald-50 rounded text-center font-bold text-emerald-800 hidden"></div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Process Map Section -->
-        <section id="process" class="tab-content hidden">
-            <h2 class="text-2xl font-bold mb-6">Process Visualizer</h2>
-            <div class="card p-8 flex flex-col items-center">
-                <div class="flex flex-wrap justify-center items-center gap-4">
-                    <div class="p-4 bg-slate-100 border-2 border-slate-300 rounded text-center">
-                        <span class="text-xs font-bold block">STEP 1</span>
-                        Inbound
-                    </div>
-                    <div class="text-slate-400">➔</div>
-                    <div class="p-4 bg-blue-100 border-2 border-blue-300 rounded text-center shadow-lg">
-                        <span class="text-xs font-bold block">STEP 2</span>
-                        Sorting (BOTTLENECK)
-                    </div>
-                    <div class="text-slate-400">➔</div>
-                    <div class="p-4 bg-slate-100 border-2 border-slate-300 rounded text-center">
-                        <span class="text-xs font-bold block">STEP 3</span>
-                        Staging
-                    </div>
-                    <div class="text-slate-400">➔</div>
-                    <div class="p-4 bg-slate-100 border-2 border-slate-300 rounded text-center">
-                        <span class="text-xs font-bold block">STEP 4</span>
-                        Shipping
-                    </div>
-                </div>
-                <p class="mt-8 text-sm text-slate-500 italic max-w-md text-center">
-                    Visual representation of the physical flow. Highlighted blue box indicates the identified primary constraint (Station 2).
-                </p>
-            </div>
-        </section>
-
-    </main>
-
     <script>
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(section => {
-                section.classList.add('hidden');
+        const stores = [
+            { id: 'S1', name: "Bansi Dairy", img: "🥛", dist: 0.4, tag: "Cluster A", menu: [{ name: "Fresh Paneer", prep: 8 }, { name: "Sweet Lassi", prep: 5 }, { name: "Greek Yogurt", prep: 12 }, { name: "Masala Chaas", prep: 4 }] },
+            { id: 'S2', name: "Hotel Chola", img: "🥘", dist: 0.9, tag: "Cluster A", menu: [{ name: "Mutton Biryani", prep: 28 }, { name: "Chicken Fry", prep: 22 }, { name: "Veg Thali", prep: 18 }, { name: "Butter Naan", prep: 10 }] },
+            { id: 'S3', name: "The Salad Co", img: "🥗", dist: 2.8, tag: "Cluster B", menu: [{ name: "Protein Bowl", prep: 15 }, { name: "Garden Salad", prep: 10 }, { name: "Avocado Toast", prep: 12 }, { name: "Fruit Medley", prep: 7 }] }
+        ];
+
+        let cart = [];
+        let isStressActive = false;
+
+        function init() { renderStores(); updateUI(); }
+
+        function renderStores() {
+            const container = document.getElementById('stores-container');
+            container.innerHTML = '';
+            const firstStore = cart.length > 0 ? stores.find(s => s.id === cart[0].storeId) : null;
+            stores.forEach(store => {
+                const isSoftLocked = firstStore && store.id !== firstStore.id && Math.abs(store.dist - firstStore.dist) > 1.2;
+                container.innerHTML += `
+                <div class="${isSoftLocked ? 'opacity-30 pointer-events-none' : ''}">
+                    <div class="flex items-center gap-3 mb-4 px-1"><div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-xl shadow-sm border border-slate-100">${store.img}</div><div><h4 class="font-black text-lg">${store.name}</h4><p class="text-[10px] font-bold text-slate-400 uppercase">${store.dist}km • ${store.tag}</p></div></div>
+                    <div class="grid grid-cols-2 gap-3">${store.menu.map(dish => `<div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between active:scale-95 transition-transform"><div><p class="font-bold text-sm text-slate-700 leading-tight mb-1">${dish.name}</p><p class="text-[10px] font-bold text-slate-400">${dish.prep}m prep</p></div><button onclick="addToCart('${store.id}', '${dish.name}', ${dish.prep})" class="mt-3 w-full py-2 bg-slate-50 text-[#E23744] rounded-lg font-black text-[10px] border border-red-50">+ ADD</button></div>`).join('')}</div>
+                </div>`;
             });
-            document.getElementById(tabId).classList.remove('hidden');
         }
 
-        function calcTakt() {
-            const time = document.getElementById('workTime').value;
-            const demand = document.getElementById('demand').value;
-            const result = (time / demand).toFixed(2);
-            const el = document.getElementById('taktResult');
-            el.innerText = `Takt Time: ${result} minutes per unit`;
-            el.classList.remove('hidden');
+        function toggleStress() {
+            isStressActive = !isStressActive;
+            const knob = document.getElementById('stress-knob');
+            const bg = document.getElementById('stress-bg');
+            const opsCard = document.getElementById('ops-card');
+            knob.style.transform = isStressActive ? 'translateX(28px)' : 'translateX(0)';
+            bg.style.backgroundColor = isStressActive ? '#ef4444' : '#334155';
+            opsCard.style.backgroundColor = isStressActive ? '#450a0a' : '#0f172a';
+            renderStores(); updateUI();
         }
 
-        function calcROI() {
-            const cost = document.getElementById('cost').value;
-            const savings = document.getElementById('savings').value;
-            const roi = ((savings / cost) * 100).toFixed(1);
-            const payback = (cost / savings).toFixed(1);
-            const el = document.getElementById('roiResult');
-            el.innerText = `ROI: ${roi}% | Payback: ${payback} years`;
-            el.classList.remove('hidden');
+        function addToCart(storeId, dishName, prep) { cart.push({ storeId, name: dishName, prep, instanceId: Date.now() }); renderStores(); updateUI(); }
+
+        function updateUI() {
+            const activeStores = [...new Set(cart.map(i => i.storeId))];
+            const preps = cart.map(i => i.prep);
+            const delta = preps.length > 1 ? Math.max(...preps) - Math.min(...preps) : 0;
+            const maxPrep = Math.max(...preps, 0);
+
+            document.getElementById('delta-display').innerText = `${delta}m`;
+            document.getElementById('delta-display').className = `text-lg font-black mono ${delta > 15 ? 'text-orange-400' : 'text-emerald-400'}`;
+            document.getElementById('complexity-label').innerText = isStressActive ? 'Protocol: Atomic Only' : (activeStores.length > 1 ? 'Multi-Node Match' : 'Atomic Flow');
+            document.getElementById('cart-count').innerText = cart.length;
+            document.getElementById('cart-count').classList.toggle('hidden', cart.length === 0);
+
+            const btn = document.getElementById('checkout-btn');
+            const msg = document.getElementById('governor-msg');
+            if (isStressActive && activeStores.length > 1) {
+                btn.disabled = true; btn.innerText = "ATOMIC REQUIRED";
+                msg.innerText = "Multi-cart disabled under Stress Mode.";
+                msg.className = "text-[11px] text-red-500 font-bold bg-red-50 p-3 rounded-xl border border-red-100";
+            } else if (cart.length === 0) {
+                btn.disabled = true; btn.innerText = "EMPTY CART";
+            } else {
+                btn.disabled = false; btn.innerText = "PLACE ORDER";
+                msg.innerText = `Verified across ${activeStores.length} nodes. Ready for Atomic Settlement.`;
+                msg.className = "text-xs text-slate-500 mb-8 font-medium";
+            }
+
+            const viz = document.getElementById('jit-viz');
+            viz.innerHTML = cart.length ? '<p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">JIT Synchronization</p>' : '';
+            cart.forEach(item => {
+                const wait = maxPrep - item.prep;
+                viz.innerHTML += `<div class="space-y-1.5"><div class="flex justify-between text-[10px] font-extrabold px-1"><span class="text-slate-600">${item.name}</span><span class="mono text-slate-400">${item.prep}m</span></div><div class="h-2.5 w-full bg-white rounded-full overflow-hidden flex border border-slate-200/50 shadow-inner"><div class="bg-blue-100 h-full transition-all duration-1000" style="width: ${(wait/maxPrep)*100}%"></div><div class="bg-[#E23744] h-full transition-all duration-1000" style="width: ${(item.prep/maxPrep)*100}%"></div></div></div>`;
+            });
+
+            document.getElementById('cart-items').innerHTML = cart.map((item, idx) => `<div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100 shadow-sm"><div><p class="font-bold text-sm text-slate-800">${item.name}</p><p class="text-[10px] text-slate-400 font-bold uppercase">${stores.find(s=>s.id==item.storeId).name} • ${item.prep}m</p></div><button onclick="cart.splice(${idx},1);renderStores();updateUI()" class="text-slate-300">✕</button></div>`).join('');
         }
 
-        function saveNotes() {
-            const notes = document.getElementById('caseNotes').value;
-            // In a real app, this would save to a database
-            const statusBox = document.createElement('div');
-            statusBox.className = "fixed bottom-4 right-4 bg-slate-800 text-white px-4 py-2 rounded-lg shadow-xl animate-bounce";
-            statusBox.innerText = "Progress Saved Locally!";
-            document.body.appendChild(statusBox);
-            setTimeout(() => statusBox.remove(), 3000);
+        function openCart() { const sheet = document.getElementById('cart-sheet'); sheet.classList.remove('hidden'); setTimeout(() => sheet.classList.add('opacity-100'), 10); }
+
+        function startCheckout() {
+            const btn = document.getElementById('checkout-btn');
+            btn.disabled = true;
+            btn.innerText = "ATOMIC LOCKING...";
+
+            const activeStores = [...new Set(cart.map(i => i.storeId))];
+            const preps = cart.map(i => i.prep);
+            const delta = preps.length > 1 ? Math.max(...preps) - Math.min(...preps) : 0;
+
+            // Populate Settlement Nodes
+            const nodes = document.getElementById('settlement-nodes');
+            nodes.innerHTML = '';
+            activeStores.forEach(sid => {
+                const s = stores.find(x => x.id === sid);
+                nodes.innerHTML += `
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-300">${s.name} Reconciliation</span>
+                    <span class="text-[9px] text-emerald-400 uppercase font-black">Success</span>
+                </div>`;
+            });
+
+            // Update Analytics Metrics
+            document.getElementById('stat-delta').innerText = `${delta}m`;
+            document.getElementById('stat-muda').innerText = `${Math.floor(delta * 0.4)}m`;
+            document.getElementById('stat-settle-count').innerText = `${activeStores.length} Reconciliation Paths`;
+            document.getElementById('stat-complex').innerText = `O(N${activeStores.length})`;
+
+            setTimeout(() => {
+                document.getElementById('cart-content').classList.add('hidden');
+                document.getElementById('analytics-dashboard').classList.remove('hidden');
+            }, 1800);
         }
+
+        function resetApp() {
+            cart = [];
+            const sheet = document.getElementById('cart-sheet');
+            sheet.classList.add('hidden'); sheet.classList.remove('opacity-100');
+            document.getElementById('cart-content').classList.remove('hidden');
+            document.getElementById('analytics-dashboard').classList.add('hidden');
+            renderStores(); updateUI();
+        }
+
+        init();
     </script>
 </body>
 </html>
